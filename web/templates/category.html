@@ -1,0 +1,81 @@
+{{template "layout" .}}
+{{define "content"}}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h2>{{.Category.Name}}</h2>
+        <p style="margin: 0; color: #666;">{{.Category.Description}}</p>
+    </div>
+    {{if .User}}
+    <a href="/post/create?category={{.Category.ID}}" class="btn">Create New Post</a>
+    {{end}}
+</div>
+
+<!-- Filter Buttons (only for logged-in users) -->
+{{if .User}}
+<div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+    <a href="/category/{{.Category.Slug}}" class="btn"
+       style="background: {{if eq .CurrentFilter ""}}#007bff{{else}}#6c757d{{end}};">
+        All Posts
+    </a>
+    <a href="/category/{{.Category.Slug}}?filter=my-posts" class="btn"
+       style="background: {{if eq .CurrentFilter "my-posts"}}#007bff{{else}}#6c757d{{end}};">
+        My Posts
+    </a>
+    <a href="/category/{{.Category.Slug}}?filter=liked-posts" class="btn"
+       style="background: {{if eq .CurrentFilter "liked-posts"}}#007bff{{else}}#6c757d{{end}};">
+        Liked Posts
+    </a>
+</div>
+{{end}}
+
+<div class="post-list">
+    <h3>{{.FilterTitle}}</h3>
+    {{if .Posts}}
+    {{range .Posts}}
+    {{$post := .}}
+    <div class="post-item">
+        <div class="post-title">
+            <a href="/post/{{.ID}}">{{.Title}}</a>
+        </div>
+        <div class="post-meta">
+            By <strong>{{.Username}}</strong> in
+            {{range $index, $cat := .Categories}}
+            {{if $index}}, {{end}}
+            <a href="/category/{{index $post.CategorySlugs $index}}">{{$cat}}</a>
+            {{end}}
+            • {{.CreatedAt.Format "Jan 2, 2006 3:04 PM"}}
+            • {{.ViewCount}} views
+            {{if gt .ReplyCount 0}}
+            • {{.ReplyCount}} {{if eq .ReplyCount 1}}comment{{else}}comments{{end}}
+            {{end}}
+            • <span style="color: #28a745;">👍 {{.LikeCount}}</span>
+            • <span style="color: #dc3545;">👎 {{.DislikeCount}}</span>
+        </div>
+        <div class="post-content">
+            {{if gt (len .Content) 300}}
+            {{slice .Content 0 300}}...
+            {{else}}
+            {{.Content}}
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+    {{else}}
+    <p style="color: #666; font-style: italic; text-align: center; padding: 40px;">
+        {{if eq .CurrentFilter "my-posts"}}
+            You haven't created any posts in this category yet.
+            <a href="/post/create?category={{.Category.ID}}">Create your first post!</a>
+        {{else if eq .CurrentFilter "liked-posts"}}
+            You haven't liked any posts in this category yet. Browse posts and like the ones you enjoy!
+        {{else}}
+            No posts in this category yet. Be the first to start a discussion!
+            {{if .User}}
+            <a href="/post/create?category={{.Category.ID}}">Create First Post</a>
+            {{else}}
+            <a href="/login">Login to Create Post</a>
+            {{end}}
+        {{end}}
+    </p>
+    {{end}}
+</div>
+{{end}}

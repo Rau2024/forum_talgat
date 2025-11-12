@@ -1,0 +1,176 @@
+{{template "layout" .}}
+
+{{define "content"}}
+<h2>Create New Post</h2>
+
+{{if .Error}}
+<div class="error">{{.Error}}</div>
+{{end}}
+
+<form method="POST" id="createPostForm" novalidate>
+    <div class="form-group">
+        <label for="title">Title:
+            <span class="char-count"><span id="titleCount">0</span>/255</span>
+        </label>
+        <input 
+            type="text" 
+            id="title" 
+            name="title" 
+            required 
+            minlength="3" 
+            maxlength="255" 
+            value="{{.Title}}">
+        <small>3-255 characters</small>
+        <div style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none;" id="titleError"></div>
+    </div>
+    
+    <div class="form-group">
+        <label for="category_id">Categories:</label>
+        <small>Hold Ctrl (or Cmd on Mac) to select multiple categories</small>
+        <select id="category_id" name="category_id[]" multiple required style="height: 120px;">
+            {{range .Categories}}
+            <option value="{{.ID}}" 
+                {{range $.SelectedCategoryIDs}}
+                    {{if eq . $.ID}}selected{{end}}
+                {{end}}>
+                {{.Name}}
+            </option>
+            {{end}}
+        </select>
+        <small style="color: #666;">Select 1-5 categories</small>
+        <div style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none;" id="categoryError"></div>
+    </div>
+    
+    <div class="form-group">
+        <label for="content">Content:
+            <span class="char-count"><span id="contentCount">0</span>/10,000</span>
+        </label>
+        <textarea 
+            id="content" 
+            name="content" 
+            required 
+            minlength="10"
+            maxlength="10000"
+            placeholder="Write your post content here...">{{.Content}}</textarea>
+        <small>10-10,000 characters</small>
+        <div style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none;" id="contentError"></div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <button type="submit" class="btn" id="submitBtn">Create Post</button>
+        <a href="/" style="margin-left: 10px; color: #666; text-decoration: none;">Cancel</a>
+    </div>
+</form>
+
+<script>
+    const form = document.getElementById('createPostForm');
+    const title = document.getElementById('title');
+    const content = document.getElementById('content');
+    const categorySelect = document.getElementById('category_id');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Helper function to count characters correctly (like Go's utf8.RuneCountInString)
+    function countCharacters(str) {
+        return Array.from(str).length;
+        // Alternative: return [...str].length;
+    }
+
+    // Character counter for title
+    title.addEventListener('input', function() {
+        const count = countCharacters(this.value);
+        document.getElementById('titleCount').textContent = count;
+        
+        const error = document.getElementById('titleError');
+        if (count < 3) {
+            error.textContent = 'Title must be at least 3 characters';
+            error.style.display = 'block';
+            this.style.borderColor = '#dc3545';
+        } else if (count > 255) {
+            error.textContent = 'Title must be no more than 255 characters';
+            error.style.display = 'block';
+            this.style.borderColor = '#dc3545';
+        } else {
+            error.style.display = 'none';
+            this.style.borderColor = '#28a745';
+        }
+    });
+
+    // Character counter for content
+    content.addEventListener('input', function() {
+        const count = countCharacters(this.value);
+        document.getElementById('contentCount').textContent = count;
+        
+        const error = document.getElementById('contentError');
+        if (count < 10) {
+            error.textContent = 'Content must be at least 10 characters';
+            error.style.display = 'block';
+            this.style.borderColor = '#dc3545';
+        } else if (count > 10000) {
+            error.textContent = 'Content must be no more than 10,000 characters';
+            error.style.display = 'block';
+            this.style.borderColor = '#dc3545';
+        } else {
+            error.style.display = 'none';
+            this.style.borderColor = '#28a745';
+        }
+    });
+
+    // Category validation
+    categorySelect.addEventListener('change', function() {
+        const selected = Array.from(this.selectedOptions).length;
+        const error = document.getElementById('categoryError');
+        
+        if (selected === 0) {
+            error.textContent = 'Please select at least one category';
+            error.style.display = 'block';
+        } else if (selected > 5) {
+            error.textContent = 'You can select up to 5 categories';
+            error.style.display = 'block';
+        } else {
+            error.style.display = 'none';
+        }
+    });
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Validate title
+        const titleCount = countCharacters(title.value);
+        if (titleCount < 3 || titleCount > 255) {
+            document.getElementById('titleError').style.display = 'block';
+            isValid = false;
+        }
+        
+        // Validate content
+        const contentCount = countCharacters(content.value);
+        if (contentCount < 10 || contentCount > 10000) {
+            document.getElementById('contentError').style.display = 'block';
+            isValid = false;
+        }
+        
+        // Validate categories
+        const selected = Array.from(categorySelect.selectedOptions).length;
+        if (selected === 0 || selected > 5) {
+            document.getElementById('categoryError').style.display = 'block';
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            submitBtn.textContent = 'Please fix errors above';
+            setTimeout(() => {
+                submitBtn.textContent = 'Create Post';
+            }, 2000);
+        }
+    });
+
+    // Initialize character counts
+    if (title.value) {
+        document.getElementById('titleCount').textContent = countCharacters(title.value);
+    }
+    if (content.value) {
+        document.getElementById('contentCount').textContent = countCharacters(content.value);
+    }
+</script>
+{{end}}

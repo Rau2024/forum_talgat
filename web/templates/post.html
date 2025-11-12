@@ -1,0 +1,208 @@
+{{template "layout" .}}
+
+{{define "content"}}
+<div class="post-detail">
+    <h2>{{.Post.Title}}</h2>
+    <div class="post-meta">
+        By <strong>{{.Post.Username}}</strong> in
+        {{range $index, $cat := .Post.Categories}}
+        {{if $index}}, {{end}}
+        <a href="/category/{{index $.Post.CategorySlugs $index}}"
+            style="color: #007bff;">{{$cat}}</a>
+        {{end}}
+        • {{.Post.CreatedAt.Format "Jan 2, 2006 3:04 PM"}}
+        • {{.Post.ViewCount}} views
+    </div>
+
+    <div class="post-content">{{.Post.Content}}</div>
+
+    <!-- Like/Dislike Section for Post -->
+    <div
+        style="margin: 20px 0; padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 5px; display: flex; align-items: center; gap: 15px;">
+        {{if .User}}
+        <form method="POST" action="/post/{{.Post.ID}}/like"
+            style="display: inline;">
+            <button type="submit"
+                style="background: {{if and .Post.HasVoted .Post.IsLike}}#28a745{{else}}#fff{{end}}; color: {{if and .Post.HasVoted .Post.IsLike}}#fff{{else}}#28a745{{end}}; border: 2px solid #28a745; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                👍 Like ({{.Post.LikeCount}})
+            </button>
+        </form>
+        <form method="POST" action="/post/{{.Post.ID}}/dislike"
+            style="display: inline;">
+            <button type="submit"
+                style="background: {{if and .Post.HasVoted (not .Post.IsLike)}}#dc3545{{else}}#fff{{end}}; color: {{if and .Post.HasVoted (not .Post.IsLike)}}#fff{{else}}#dc3545{{end}}; border: 2px solid #dc3545; padding: 8px 16px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                👎 Dislike ({{.Post.DislikeCount}})
+            </button>
+        </form>
+        {{else}}
+        <span style="color: #28a745; font-weight: bold;">👍
+            {{.Post.LikeCount}}</span>
+        <span style="color: #dc3545; font-weight: bold;">👎
+            {{.Post.DislikeCount}}</span>
+        <span style="color: #666; font-size: 14px; margin-left: 10px;">
+            <a href="/login">Login</a> to like or dislike
+        </span>
+        {{end}}
+    </div>
+</div>
+
+{{if .Comments}}
+<div class="comments">
+    <h3>Comments ({{len .Comments}})</h3>
+    {{range .Comments}}
+    <div class="comment">
+        <div class="comment-meta">
+            <strong>{{.Username}}</strong> • {{.CreatedAt.Format
+            "Jan 2, 2006 3:04 PM"}}
+        </div>
+        <div class="comment-content">{{.Content}}</div>
+
+        <!-- Like/Dislike Section for Comment -->
+        <div
+            style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd; display: flex; align-items: center; gap: 10px;">
+            {{if $.User}}
+            <form method="POST" action="/comment/{{.ID}}/like"
+                style="display: inline;">
+                <input type="hidden" name="post_id" value="{{$.Post.ID}}">
+                <button type="submit"
+                    style="background: {{if and .HasVoted .IsLike}}#28a745{{else}}transparent{{end}}; color: {{if and .HasVoted .IsLike}}#fff{{else}}#28a745{{end}}; border: 1px solid #28a745; padding: 4px 10px; border-radius: 3px; cursor: pointer; font-size: 13px;">
+                    👍 {{.LikeCount}}
+                </button>
+            </form>
+            <form method="POST" action="/comment/{{.ID}}/dislike"
+                style="display: inline;">
+                <input type="hidden" name="post_id" value="{{$.Post.ID}}">
+                <button type="submit"
+                    style="background: {{if and .HasVoted (not .IsLike)}}#dc3545{{else}}transparent{{end}}; color: {{if and .HasVoted (not .IsLike)}}#fff{{else}}#dc3545{{end}}; border: 1px solid #dc3545; padding: 4px 10px; border-radius: 3px; cursor: pointer; font-size: 13px;">
+                    👎 {{.DislikeCount}}
+                </button>
+            </form>
+            {{else}}
+            <span style="color: #28a745; font-size: 13px;">👍
+                {{.LikeCount}}</span>
+            <span style="color: #dc3545; font-size: 13px;">👎
+                {{.DislikeCount}}</span>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+</div>
+{{else}}
+<div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
+    <p style="color: #666; font-style: italic;">No comments yet. Be the first to
+        comment!</p>
+</div>
+{{end}}
+
+{{if .User}}
+<div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 5px; border-top: 2px solid #007bff;">
+    <h3>Add a Comment</h3>
+    
+    {{/* ✅ NEW: Show backend validation error */}}
+    {{if .CommentError}}
+    <div class="error" style="margin-bottom: 15px; padding: 12px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 4px;">
+        {{.CommentError}}
+    </div>
+    {{end}}
+    
+    <form method="POST" action="/comment/{{.Post.ID}}" id="commentForm" novalidate>
+        <div class="form-group">
+            <label for="comment-content">
+                Your comment:
+                <span style="float: right; color: #666; font-size: 12px;">
+                    <span id="commentCount">0</span>/5,000
+                </span>
+            </label>
+            <textarea 
+                id="comment-content"
+                name="content" 
+                placeholder="Write your comment..." 
+                required 
+                minlength="10"
+                maxlength="5000"
+                style="height: 120px;">{{.CommentContent}}</textarea>
+            <small style="color: #666;">10-5,000 characters</small>
+            <div style="color: #dc3545; font-size: 12px; margin-top: 5px; display: none;" id="commentError"></div>
+        </div>
+        <button type="submit" class="btn" id="commentSubmitBtn">Post Comment</button>
+    </form>
+</div>
+
+<script>
+    const commentForm = document.getElementById('commentForm');
+    const commentContent = document.getElementById('comment-content');
+    const commentSubmitBtn = document.getElementById('commentSubmitBtn');
+
+    // Helper function to count characters correctly
+    function countCharacters(str) {
+        return Array.from(str).length;
+    }
+
+    // ✅ NEW: Initialize character count on page load (important when content is preserved)
+    if (commentContent.value) {
+        const initialCount = countCharacters(commentContent.value);
+        document.getElementById('commentCount').textContent = initialCount;
+        
+        // Show validation state if there's preserved content
+        const error = document.getElementById('commentError');
+        if (initialCount < 10) {
+            error.textContent = 'Comment must be at least 10 characters';
+            error.style.display = 'block';
+            commentContent.style.borderColor = '#dc3545';
+        } else if (initialCount > 5000) {
+            error.textContent = 'Comment must be no more than 5,000 characters';
+            error.style.display = 'block';
+            commentContent.style.borderColor = '#dc3545';
+        } else {
+            commentContent.style.borderColor = '#28a745';
+        }
+    }
+
+    // Character counter
+    commentContent.addEventListener('input', function() {
+        const count = countCharacters(this.value);
+        document.getElementById('commentCount').textContent = count;
+        
+        const error = document.getElementById('commentError');
+        if (count < 10) {
+            error.textContent = 'Comment must be at least 10 characters';
+            error.style.display = 'block';
+            this.style.borderColor = '#dc3545';
+        } else if (count > 5000) {
+            error.textContent = 'Comment must be no more than 5,000 characters';
+            error.style.display = 'block';
+            this.style.borderColor = '#dc3545';
+        } else {
+            error.style.display = 'none';
+            this.style.borderColor = '#28a745';
+        }
+    });
+
+    // Form validation
+    commentForm.addEventListener('submit', function(e) {
+        const count = countCharacters(commentContent.value);
+        if (count < 10 || count > 5000) {
+            e.preventDefault();
+            document.getElementById('commentError').style.display = 'block';
+            commentSubmitBtn.textContent = 'Please fix errors';
+            setTimeout(() => {
+                commentSubmitBtn.textContent = 'Post Comment';
+            }, 2000);
+        }
+    });
+
+    // ✅ NEW: Auto-focus on comment textarea if there's an error (better UX)
+    {{if .CommentError}}
+    commentContent.focus();
+    // Scroll to the comment form smoothly
+    commentForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    {{end}}
+</script>
+{{else}}
+<div
+    style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 5px; text-align: center; color: #666;">
+    <p><a href="/login">Login</a> or <a href="/register">Register</a> to comment
+        on this post.</p>
+</div>
+{{end}}
+{{end}}

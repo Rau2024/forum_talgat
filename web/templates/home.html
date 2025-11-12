@@ -1,0 +1,86 @@
+{{template "layout" .}}
+{{define "content"}}
+<h2>Welcome to the Forum</h2>
+{{if .User}}
+<p style="margin-bottom: 30px; color: #666;">
+ Hello, <strong>{{.User.Username}}</strong>!
+<a href="/post/create" class="btn" style="margin-left: 10px;">Create New
+ Post</a>
+</p>
+<!-- Filter Buttons (only for logged-in users) -->
+<div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+<a href="/" class="btn"
+style="background: {{if eq .CurrentFilter ""}}#007bff{{else}}#6c757d{{end}};">All
+ Posts</a>
+<a href="/?filter=my-posts" class="btn"
+style="background: {{if eq .CurrentFilter "my-posts"}}#007bff{{else}}#6c757d{{end}};">My
+ Posts</a>
+<a href="/?filter=liked-posts" class="btn"
+style="background: {{if eq .CurrentFilter "liked-posts"}}#007bff{{else}}#6c757d{{end}};">Liked
+ Posts</a>
+</div>
+{{else}}
+<p style="margin-bottom: 30px; color: #666;">
+<a href="/register">Register</a> or <a href="/login">login</a> to start
+ participating in discussions.
+</p>
+{{end}}
+<div class="category-list">
+ {{range .Categories}}
+<div class="category-card">
+<h3><a href="/category/{{.Slug}}">{{.Name}}</a></h3>
+<p>{{.Description}}</p>
+</div>
+ {{end}}
+</div>
+<div class="post-list">
+<h3>{{.FilterTitle}}</h3>
+ {{if .RecentPosts}}
+ {{range .RecentPosts}}
+ {{$post := .}}
+<div class="post-item">
+<div class="post-title">
+<a href="/post/{{.ID}}">{{.Title}}</a>
+</div>
+<div class="post-meta">
+ By <strong>{{.Username}}</strong> in
+ {{range $index, $cat := .Categories}}
+ {{if $index}}, {{end}}
+<a href="/category/{{index $post.CategorySlugs $index}}"
+style="color: #007bff;"><strong>{{$cat}}</strong></a>
+ {{end}}
+ • {{.CreatedAt.Format "Jan 2, 2006 3:04 PM"}}
+ • {{.ViewCount}} views
+ {{if gt .ReplyCount 0}}
+ • {{.ReplyCount}} {{if eq .ReplyCount 1}}comment{{else}}comments{{end}}
+ {{end}}
+ • <span style="color: #28a745;">👍 {{.LikeCount}}</span>
+ • <span style="color: #dc3545;">👎 {{.DislikeCount}}</span>
+</div>
+<div class="post-content">
+ {{if gt (len .Content) 200}}
+ {{slice .Content 0 200}}...
+ {{else}}
+ {{.Content}}
+ {{end}}
+</div>
+</div>
+ {{end}}
+ {{else}}
+<p
+style="color: #666; font-style: italic; text-align: center; padding: 40px;">
+ {{if eq .CurrentFilter "my-posts"}}
+ You haven't created any posts yet. <a href="/post/create">Create your
+ first post!</a>
+ {{else if eq .CurrentFilter "liked-posts"}}
+ You haven't liked any posts yet. Browse posts and like the ones you
+ enjoy!
+ {{else}}
+ No posts yet. {{if .User}}<a href="/post/create">Create the first
+ one!</a>{{else}}<a href="/register">Register</a> to create the first
+ post!{{end}}
+ {{end}}
+</p>
+ {{end}}
+</div>
+{{end}}

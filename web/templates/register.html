@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en" class="auth-page">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="icon"
+            href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
+        <title>Register - Go Forum</title>
+        <!-- Link to external CSS -->
+        <link rel="stylesheet" href="/static/css/style.css">
+        
+    </head>
+    <body class="auth-page">
+        <div class="container">
+            <h2>Register for Forum</h2>
+            <p><a href="/">← Back to Forum</a></p>
+
+            {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+
+            <form method="POST" id="registerForm" novalidate>
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        required
+                        minlength="3"
+                        maxlength="50"
+                        pattern="[a-zA-Z0-9_\-]+"
+                        title="Username can only contain letters, numbers, underscores, and hyphens"
+                        autocomplete="username">
+                    <small>3-50 characters (letters, numbers, _, -)</small>
+                    <div class="error-message" id="usernameError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input
+                        type="text"
+                        id="email"
+                        name="email"
+                        required
+                        maxlength="100"
+                        title="Please enter a valid email address (e.g., user@example.com)"
+                        autocomplete="email">
+                    <small>Valid email address (e.g., user@example.com)</small>
+                    <div class="error-message" id="emailError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        minlength="8"
+                        maxlength="128"
+                        autocomplete="new-password">
+                    <div class="password-requirements">
+                        <div class="requirement-title">Password must contain:</div>
+                        <div class="requirement" id="req-length">
+                            <span class="req-icon">○</span> At least 8 characters
+                        </div>
+                        <div class="requirement" id="req-uppercase">
+                            <span class="req-icon">○</span> One uppercase letter (A-Z)
+                        </div>
+                        <div class="requirement" id="req-lowercase">
+                            <span class="req-icon">○</span> One lowercase letter (a-z)
+                        </div>
+                        <div class="requirement" id="req-digit">
+                            <span class="req-icon">○</span> One number (0-9)
+                        </div>
+                        <div class="requirement" id="req-special">
+                            <span class="req-icon">○</span> One special character (!@#$%^&*)
+                        </div>
+                        <div class="requirement" id="req-no-spaces">
+                            <span class="req-icon">○</span> No spaces allowed
+                        </div>
+                    </div>
+                    <div class="password-strength">
+                        <div class="strength-label">Password strength:</div>
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill"></div>
+                        </div>
+                        <div class="strength-text" id="strengthText">Enter password</div>
+                    </div>
+                    <div class="error-message" id="passwordError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password:</label>
+                    <input
+                        type="password"
+                        id="confirm_password"
+                        name="confirm_password"
+                        required
+                        autocomplete="new-password">
+                    <small>Must match password</small>
+                    <div class="error-message" id="confirmPasswordError"></div>
+                </div>
+
+                <button type="submit" class="btn">Register</button>
+            </form>
+
+            <p style="text-align: center; margin-top: 20px;">
+                Already have an account? <a href="/login">Login here</a>
+            </p>
+        </div>
+
+        <script>
+    const form = document.getElementById('registerForm');
+    const username = document.getElementById('username');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirm_password');
+
+    // Helper function to count characters correctly (matches Go's utf8.RuneCountInString)
+    function countCharacters(str) {
+        return Array.from(str).length;
+    }
+
+    // Validation patterns
+    const usernamePattern = /^[a-zA-Z0-9_\-]+$/;
+    const emailPattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+    // Real-time username validation
+    username.addEventListener('input', function() {
+        const error = document.getElementById('usernameError');
+        const value = this.value;
+        const trimmedValue = value.trim();
+        const length = countCharacters(trimmedValue);
+        
+        // Empty state
+        if (value.length === 0) {
+            error.style.display = 'none';
+            this.classList.remove('valid', 'invalid');
+            return;
+        }
+        
+        // Check for whitespace
+        if (value !== trimmedValue) {
+            error.textContent = 'Username cannot have spaces at the beginning or end';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+        
+        // Check length (minimum)
+        if (length < 3) {
+            error.textContent = 'Username must be at least 3 characters';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+        
+        // Check length (maximum)
+        if (length > 50) {
+            error.textContent = 'Username must be no more than 50 characters';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+        
+        // Check pattern
+        if (!usernamePattern.test(value)) {
+            error.textContent = 'Username can only contain letters, numbers, underscores, and hyphens';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+        
+        // All checks passed
+        error.style.display = 'none';
+        this.classList.remove('invalid');
+        this.classList.add('valid');
+    });
+
+    // Real-time email validation
+    email.addEventListener('input', function() {
+        const error = document.getElementById('emailError');
+        const value = this.value;
+        const trimmedValue = value.trim();
+        const length = countCharacters(trimmedValue);
+        
+        // Empty state
+        if (value.length === 0) {
+            error.style.display = 'none';
+            this.classList.remove('valid', 'invalid');
+            return;
+        }
+        
+        // Check for whitespace
+        if (value !== trimmedValue) {
+            error.textContent = 'Email cannot have spaces at the beginning or end';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+        
+        // Check format
+        if (!emailPattern.test(value)) {
+            error.textContent = 'Please enter a valid email address (e.g., user@example.com)';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+        
+        // Check length
+        if (length > 100) {
+            error.textContent = 'Email must be no more than 100 characters';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+        
+        // All checks passed
+        error.style.display = 'none';
+        this.classList.remove('invalid');
+        this.classList.add('valid');
+    });
+
+    // Real-time password validation
+    password.addEventListener('input', function () {
+        const error = document.getElementById('passwordError');
+        const value = this.value;
+        const length = countCharacters(value);
+
+        // Empty state
+        if (value.length === 0) {
+            error.style.display = 'none';
+            this.classList.remove('valid', 'invalid');
+            resetPasswordRequirements();
+            updateStrengthMeter(0, 'Enter password');
+            return;
+        }
+
+        // Check all requirements
+        const hasMinLength = length >= 8;
+        const hasMaxLength = length <= 128;
+        const hasUppercase = /[A-Z]/.test(value);
+        const hasLowercase = /[a-z]/.test(value);
+        const hasDigit = /[0-9]/.test(value);
+        const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value);
+        const noSpaces = !value.includes(' ');
+
+        // Update requirement indicators
+        updateRequirement('req-length', hasMinLength && hasMaxLength);
+        updateRequirement('req-uppercase', hasUppercase);
+        updateRequirement('req-lowercase', hasLowercase);
+        updateRequirement('req-digit', hasDigit);
+        updateRequirement('req-special', hasSpecial);
+        updateRequirement('req-no-spaces', noSpaces);
+
+        // Calculate strength
+        let strength = 0;
+        if (hasMinLength) strength++;
+        if (hasUppercase) strength++;
+        if (hasLowercase) strength++;
+        if (hasDigit) strength++;
+        if (hasSpecial) strength++;
+        if (noSpaces) strength++;
+
+        // Update strength meter
+        if (strength <= 2) {
+            updateStrengthMeter(1, 'Weak');
+        } else if (strength <= 4) {
+            updateStrengthMeter(2, 'Fair');
+        } else if (strength <= 5) {
+            updateStrengthMeter(3, 'Good');
+        } else {
+            updateStrengthMeter(4, 'Strong');
+        }
+
+        // Validation with specific error messages
+        if (value.includes(' ')) {
+            error.textContent = 'Password cannot contain spaces';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+
+        if (length < 8) {
+            error.textContent = 'Password must be at least 8 characters';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+
+        if (length > 128) {
+            error.textContent = 'Password must be no more than 128 characters';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+
+        if (!hasUppercase) {
+            error.textContent = 'Password must contain at least one uppercase letter';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+
+        if (!hasLowercase) {
+            error.textContent = 'Password must contain at least one lowercase letter';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+
+        if (!hasDigit) {
+            error.textContent = 'Password must contain at least one number';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+
+        if (!hasSpecial) {
+            error.textContent = 'Password must contain at least one special character';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+
+        // All checks passed
+        error.style.display = 'none';
+        this.classList.remove('invalid');
+        this.classList.add('valid');
+
+        // Revalidate confirm password if it has a value
+        if (confirmPassword.value.length > 0) {
+            confirmPassword.dispatchEvent(new Event('input'));
+        }
+    });
+
+    // Helper function to update requirement indicators
+    function updateRequirement(id, isMet) {
+        const element = document.getElementById(id);
+        if (isMet) {
+            element.classList.add('met');
+        } else {
+            element.classList.remove('met');
+        }
+    }
+
+    // Helper function to reset all requirements
+    function resetPasswordRequirements() {
+        const requirements = ['req-length', 'req-uppercase', 'req-lowercase', 'req-digit', 'req-special', 'req-no-spaces'];
+        requirements.forEach(id => {
+            document.getElementById(id).classList.remove('met');
+        });
+    }
+
+    // Helper function to update strength meter
+    function updateStrengthMeter(level, text) {
+        const strengthFill = document.getElementById('strengthFill');
+        const strengthText = document.getElementById('strengthText');
+        
+        // Remove all classes
+        strengthFill.className = 'strength-fill';
+        strengthText.className = 'strength-text';
+        
+        // Add appropriate class based on level
+        if (level === 0) {
+            strengthText.textContent = text;
+        } else if (level === 1) {
+            strengthFill.classList.add('weak');
+            strengthText.classList.add('weak');
+            strengthText.textContent = text;
+        } else if (level === 2) {
+            strengthFill.classList.add('fair');
+            strengthText.classList.add('fair');
+            strengthText.textContent = text;
+        } else if (level === 3) {
+            strengthFill.classList.add('good');
+            strengthText.classList.add('good');
+            strengthText.textContent = text;
+        } else if (level === 4) {
+            strengthFill.classList.add('strong');
+            strengthText.classList.add('strong');
+            strengthText.textContent = text;
+        }
+    }
+
+    // Real-time confirm password validation
+    confirmPassword.addEventListener('input', function() {
+        const error = document.getElementById('confirmPasswordError');
+        const value = this.value;
+        
+        // Empty state
+        if (value.length === 0) {
+            error.style.display = 'none';
+            this.classList.remove('valid', 'invalid');
+            return;
+        }
+        
+        // Check match
+        if (value !== password.value) {
+            error.textContent = 'Passwords do not match';
+            error.style.display = 'block';
+            this.classList.remove('valid');
+            this.classList.add('invalid');
+            return;
+        }
+        
+        // All checks passed
+        error.style.display = 'none';
+        this.classList.remove('invalid');
+        this.classList.add('valid');
+    });
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Validate username
+        const usernameValue = username.value;
+        const trimmedUsername = usernameValue.trim();
+        const usernameLength = countCharacters(trimmedUsername);
+        
+        if (usernameValue !== trimmedUsername) {
+            const error = document.getElementById('usernameError');
+            error.textContent = 'Username cannot have spaces at the beginning or end';
+            error.style.display = 'block';
+            username.classList.add('invalid');
+            username.classList.remove('valid');
+            isValid = false;
+        } else if (usernameLength < 3 || usernameLength > 50 || !usernamePattern.test(usernameValue)) {
+            const error = document.getElementById('usernameError');
+            if (usernameLength < 3) {
+                error.textContent = 'Username must be at least 3 characters';
+            } else if (usernameLength > 50) {
+                error.textContent = 'Username must be no more than 50 characters';
+            } else {
+                error.textContent = 'Username can only contain letters, numbers, underscores, and hyphens';
+            }
+            error.style.display = 'block';
+            username.classList.add('invalid');
+            username.classList.remove('valid');
+            isValid = false;
+        }
+        
+        // Validate email
+        const emailValue = email.value;
+        const trimmedEmail = emailValue.trim();
+        const emailLength = countCharacters(trimmedEmail);
+        
+        if (emailValue !== trimmedEmail) {
+            const error = document.getElementById('emailError');
+            error.textContent = 'Email cannot have spaces at the beginning or end';
+            error.style.display = 'block';
+            email.classList.add('invalid');
+            email.classList.remove('valid');
+            isValid = false;
+        } else if (!emailPattern.test(emailValue)) {
+            const error = document.getElementById('emailError');
+            error.textContent = 'Please enter a valid email address (e.g., user@example.com)';
+            error.style.display = 'block';
+            email.classList.add('invalid');
+            email.classList.remove('valid');
+            isValid = false;
+        } else if (emailLength > 100) {
+            const error = document.getElementById('emailError');
+            error.textContent = 'Email must be no more than 100 characters';
+            error.style.display = 'block';
+            email.classList.add('invalid');
+            email.classList.remove('valid');
+            isValid = false;
+        }
+        
+        // Validate password
+        const passwordValue = password.value;
+        const passwordLength = countCharacters(passwordValue);
+        
+        // ✅ NEW: Check for spaces
+        if (passwordValue.includes(' ')) {
+            const error = document.getElementById('passwordError');
+            error.textContent = 'Password cannot contain spaces';
+            error.style.display = 'block';
+            password.classList.add('invalid');
+            password.classList.remove('valid');
+            isValid = false;
+        } else if (passwordLength < 8) {
+            const error = document.getElementById('passwordError');
+            error.textContent = 'Password must be at least 8 characters';
+            error.style.display = 'block';
+            password.classList.add('invalid');
+            password.classList.remove('valid');
+            isValid = false;
+        } else if (passwordLength > 128) {
+            const error = document.getElementById('passwordError');
+            error.textContent = 'Password must be no more than 128 characters';
+            error.style.display = 'block';
+            password.classList.add('invalid');
+            password.classList.remove('valid');
+            isValid = false;
+        }
+        
+        // Validate password match
+        if (password.value !== confirmPassword.value) {
+            const error = document.getElementById('confirmPasswordError');
+            error.textContent = 'Passwords do not match';
+            error.style.display = 'block';
+            confirmPassword.classList.add('invalid');
+            confirmPassword.classList.remove('valid');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            // Scroll to first error
+            const firstError = document.querySelector('.invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        }
+    });
+
+    // Clear error styling on focus
+    [username, email, password, confirmPassword].forEach(input => {
+        input.addEventListener('focus', function() {
+            if (this.value.length === 0) {
+                this.classList.remove('valid', 'invalid');
+            }
+        });
+    });
+</script>
+    </body>
+</html>

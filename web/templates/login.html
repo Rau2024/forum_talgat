@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" class="auth-page">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="icon"
+            href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
+        <title>Login - Go Forum</title>
+<!-- Link to external CSS -->
+        <link rel="stylesheet" href="/static/css/style.css">
+    </head>
+    <body class="auth-page">
+        <div class="container">
+            <h2>Login to Forum</h2>
+            <p><a href="/">← Back to Forum</a></p>
+
+            {{if .Error}}<div class="error">{{.Error}}</div>{{end}}
+            {{if .Success}}<div class="success">{{.Success}}</div>{{end}}
+
+            <form method="POST">
+                <div class="form-group">
+                    <label>Username or Email:</label>
+                    <input type="text" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form>
+
+            <p style="text-align: center; margin-top: 20px;">
+                Don't have an account? <a href="/register">Register here</a>
+            </p>
+        </div>
+    </body>
+</html>
